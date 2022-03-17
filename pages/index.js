@@ -1,18 +1,36 @@
-import Head from 'next/head'
-import Link from 'next/link'
-import Layout from '../components/layout'
+import Error from 'next/error';
 
-export default function Home() {
+const Home = ({ posts, statusCode }) => {
+  if (statusCode) {
+    return <Error statusCode={statusCode} />;
+  }
+
   return (
-    <Layout>
-      <h1>Home</h1>
+    <div>
+      <h1>POSTS</h1>
+      <ul>
+        {!posts
+          ? null
+          : posts.map((post, index) => {
+              return <li key={index}>{post.title}</li>;
+            })}
+      </ul>
+    </div>
+  );
+};
 
-      <Link href="/sign-in">
-          <a>sign in</a>
-      </Link>
-      <Link href="/sign-up">
-          <a>sign up</a>
-      </Link>
-    </Layout>
-  )
-}
+Home.getInitialProps = async (_ctx) => {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/posts`);
+    const data = await res.json();
+    return {
+      posts: data.posts,
+    };
+  } catch (error) {
+    return {
+      statusCode: error.response ? error.response.status : 500,
+    };
+  }
+};
+
+export default Home;
